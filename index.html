@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>대리운전 시뮬레이션</title>
+    <title>대리운전 시뮬레이션 + 랭킹</title>
     <style>
         body { font-family: sans-serif; background-color: #f0f0f0; text-align: center; margin: 0; padding: 0; }
         #game-container { background: white; padding: 10px; margin: 20px auto; width: 90%; max-width: 400px; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
@@ -13,30 +13,24 @@
         #event-img { width: 90%; height: auto; margin-top: 10px; display: none; }
         .char-description { font-size: 12px; color: #333; margin-bottom: 10px; }
         #event-description { font-size: 13px; margin-top: 5px; color: #555; }
+        #rankingArea { background: #fff; padding: 10px; margin: 10px auto; width: 90%; max-width: 400px; }
     </style>
-</head>
-<body>
-    <div id="game-container">
-        <h1>대리운전 시뮬레이션</h1>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
-        <div id="character-select">
-            <p>캐릭터를 선택하세요:</p>
-            <div id="char-buttons"></div>
-        </div>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCxRz9AGs1ADcSDkXSRwpxQj6J6T5U0Rls",
+            authDomain: "daeri-b48bb.firebaseapp.com",
+            projectId: "daeri-b48bb",
+            storageBucket: "daeri-b48bb.appspot.com",
+            messagingSenderId: "354494373374",
+            appId: "1:354494373374:web:6f204c79027ddc020974af"
+        };
 
-        <div id="game" style="display:none;">
-            <div class="status">선택된 캐릭터: <span id="character"></span></div>
-            <div class="status">매출: <span id="revenue">0</span>원</div>
-            <div class="status">피로도: <span id="fatigue">0</span>%</div>
-            <div class="status">목표: <span id="goal">100000</span>원</div>
-            <div id="message">다음 콜을 선택하세요:</div>
-            <div id="choices"></div>
-            <img id="event-img" src="" alt="이벤트 이미지">
-            <div id="event-description"></div>
-        </div>
-    </div>
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-    <script>
         const characters = [
             { name: '밤지기', ability: '피로도 -50% 시작' },
             { name: '전설의대리', ability: '아무일 없음 시 피로도 절반' },
@@ -68,18 +62,9 @@
         let revenue = 0;
         let fatigue = 0;
         let goal = 100000;
+        let turns = 0;
 
-        function loadCharacterButtons() {
-            const container = document.getElementById('char-buttons');
-            characters.forEach(char => {
-                const div = document.createElement('div');
-                div.innerHTML = `<button onclick="selectCharacter('${char.name}')">${char.name}</button>
-                                 <div class="char-description">${char.ability}</div>`;
-                container.appendChild(div);
-            });
-        }
-
-        function selectCharacter(charName) {
+        window.selectCharacter = function(charName) {
             selectedCharacter = charName;
             document.getElementById('character').textContent = charName;
             document.getElementById('character-select').style.display = 'none';
@@ -87,6 +72,86 @@
             if (charName === '밤지기') fatigue = -50;
             updateDisplay();
             setupChoices();
+        }
+
+        function updateDisplay() {
+            document.getElementById('revenue').textContent = revenue;
+            document.getElementById('fatigue').textContent = Math.max(fatigue, 0);
+            document.getElementById('goal').textContent = goal;
+            document.getElementById('turns').textContent = turns;
+        }
+
+        function setupChoices() {
+            const container = document.getElementById('choices');
+            container.innerHTML = '';
+            const shuffled = choices.sort(() => 0.5 - Math.random());
+            const selected = shuffled.slice(0, Math.floor(Math.random() * 2) + 3);
+            selected.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.textContent = choice.name;
+                btn.onclick = () => handleChoice(choice);
+                container.appendChild(btn);
+            });
+        }
+
+        async function handleChoice(choice) {
+            turns++;
+            let actualFatigue = choice.fatigue;
+            let actualRevenue = Math.floor(Math.random() * (choice.max - choice.min + 1)) + choice.min;
+            revenue += actualRevenue;
+            fatigue += actualFatigue;
+
+            const event = events[Math.floor(Math.random() * events.length)];
+            document.getElementById('event-img').src = event.img;
+            document.getElementById('event-img').style.display = 'block';
+            document.getElementById('event-description').textContent = `${event.name}: ${event.description}`;
+
+            if (fatigue >= 100) {
+                await endGame();
+            } else if (revenue >= goal) {
+                alert(`목표 ${goal}원 달성! 다음 라운드로 갑니다.`);
+                goal *= 2;
+            }
+
+            updateDisplay();
+            setupChoices();
+        }
+
+        async function endGame() {
+            alert(`게임 종료! 총 콜 수: ${turns}, 최종 매출: ${revenue}원`);
+            const name = prompt("닉네임을 입력하세요:");
+            if (name) {
+                await addDoc(collection(db, "rankings"), {
+                    player: name,
+                    sales: revenue,
+                    calls: turns,
+                    timestamp: new Date()
+                });
+                showRankings();
+            }
+            resetGame();
+        }
+
+        async function showRankings() {
+            const area = document.getElementById('rankingArea');
+            area.innerHTML = "<h2>🏆 상위 랭킹</h2>";
+            const q = query(collection(db, "rankings"), orderBy("sales", "desc"), limit(5));
+            const snapshot = await getDocs(q);
+            snapshot.forEach((doc, idx) => {
+                const data = doc.data();
+                const p = document.createElement('p');
+                p.textContent = `${idx + 1}위 - ${data.player}: ${data.sales}원 (${data.calls}콜)`;
+                area.appendChild(p);
+            });
+        }
+
+        function resetGame() {
+            revenue = 0;
+            fatigue = 0;
+            goal = 100000;
+            turns = 0;
+            document.getElementById('game').style.display = 'none';
+            document.getElementById('character-select').style.display = 'block';
         }
 
         const choices = [
@@ -99,48 +164,38 @@
             { name: '콜마너', fatigue: 15, min: 15000, max: 70000 }
         ];
 
-        function updateDisplay() {
-            document.getElementById('revenue').textContent = revenue;
-            document.getElementById('fatigue').textContent = Math.max(fatigue, 0);
-            document.getElementById('goal').textContent = goal;
-        }
-
-        function setupChoices() {
-            const container = document.getElementById('choices');
-            container.innerHTML = '';
-            choices.forEach(choice => {
-                const btn = document.createElement('button');
-                btn.textContent = choice.name;
-                btn.onclick = () => handleChoice(choice);
-                container.appendChild(btn);
+        function loadCharacterButtons() {
+            const container = document.getElementById('char-buttons');
+            characters.forEach(char => {
+                const div = document.createElement('div');
+                div.innerHTML = `<button onclick="selectCharacter('${char.name}')">${char.name}</button>
+                                 <div class="char-description">${char.ability}</div>`;
+                container.appendChild(div);
             });
-        }
-
-        function handleChoice(choice) {
-            let actualFatigue = choice.fatigue;
-            let actualRevenue = Math.floor(Math.random() * (choice.max - choice.min + 1)) + choice.min;
-            revenue += actualRevenue;
-            fatigue += actualFatigue;
-
-            const event = events[Math.floor(Math.random() * events.length)];
-            document.getElementById('event-img').src = event.img;
-            document.getElementById('event-img').style.display = 'block';
-            document.getElementById('event-description').textContent = `${event.name}: ${event.description}`;
-
-            if (fatigue >= 100) {
-                alert('피로도가 100%를 초과했습니다. 게임 오버!');
-                revenue = 0;
-                fatigue = 0;
-                goal = 100000;
-            } else if (revenue >= goal) {
-                alert(`목표 ${goal}원 달성! 다음 라운드로 갑니다.`);
-                goal *= 2;
-            }
-
-            updateDisplay();
         }
 
         loadCharacterButtons();
     </script>
+</head>
+<body>
+    <div id="game-container">
+        <h1>대리운전 시뮬레이션</h1>
+        <div id="character-select">
+            <p>캐릭터를 선택하세요:</p>
+            <div id="char-buttons"></div>
+        </div>
+        <div id="game" style="display:none;">
+            <div class="status">선택된 캐릭터: <span id="character"></span></div>
+            <div class="status">매출: <span id="revenue">0</span>원</div>
+            <div class="status">피로도: <span id="fatigue">0</span>%</div>
+            <div class="status">목표: <span id="goal">100000</span>원</div>
+            <div class="status">콜 수: <span id="turns">0</span></div>
+            <div id="message">랜덤 콜을 선택하세요:</div>
+            <div id="choices"></div>
+            <img id="event-img" src="" alt="이벤트 이미지">
+            <div id="event-description"></div>
+        </div>
+    </div>
+    <div id="rankingArea"></div>
 </body>
 </html>
