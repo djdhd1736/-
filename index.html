@@ -10,6 +10,8 @@
         .status { margin: 10px 0; }
         button { margin: 5px; padding: 10px 20px; }
         #event-img { width: 300px; height: auto; margin-top: 10px; display: none; }
+        #description { margin-top: 20px; font-size: 14px; color: #555; text-align: left; }
+        #description ul { list-style: none; padding-left: 0; }
     </style>
 </head>
 <body>
@@ -21,6 +23,27 @@
         <div id="message">다음 콜을 선택하세요:</div>
         <div id="choices"></div>
         <img id="event-img" src="" alt="이벤트 이미지">
+
+        <audio id="click-sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_329e799b97.mp3?filename=button-124476.mp3"></audio>
+        <audio id="event-sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_1c56c1f79c.mp3?filename=notification-124473.mp3"></audio>
+
+        <div id="description">
+            <p><strong>※ 게임 설명:</strong></p>
+            <ul>
+                <li>각 버튼을 눌러 콜을 선택하세요 (클릭 시 효과음).</li>
+                <li>랜덤 이벤트가 발생하며, 매출과 피로도가 변합니다 (이벤트 시 효과음).</li>
+                <li><strong>팁을 받았다:</strong> 피로도 감소, 매출 소폭 증가.</li>
+                <li><strong>진상손님:</strong> 피로도 크게 증가.</li>
+                <li><strong>매너손님:</strong> 피로도 감소.</li>
+                <li><strong>사고발생:</strong> 피로도 크게 증가, 매출 크게 감소.</li>
+                <li><strong>콜취소:</strong> 피로도 약간 증가.</li>
+                <li><strong>아무일 없음:</strong> 변화 없음.</li>
+                <li><strong>경유/착변:</strong> 매출 소폭 증가.</li>
+                <li><strong>숟가락 회원 만남:</strong> 피로도 크게 감소.</li>
+                <li>피로도가 100%가 되면 게임 오버.</li>
+                <li>목표 매출 달성 시 다음 라운드로 넘어갑니다 (목표 x2).</li>
+            </ul>
+        </div>
     </div>
 
     <script>
@@ -72,12 +95,15 @@
         }
 
         function handleChoice(choice) {
+            document.getElementById('click-sound').play();
             revenue += Math.floor(Math.random() * (choice.max - choice.min + 1)) + choice.min;
             fatigue += choice.fatigue;
 
             const event = randomEvent();
             revenue += Math.floor(Math.random() * (event.revenueMax - event.revenueMin + 1)) + event.revenueMin;
             fatigue += event.fatigueChange;
+
+            document.getElementById('event-sound').play();
 
             if (fatigue < 0) fatigue = 0;
             document.getElementById('message').textContent = `${event.name} 발생!`;
