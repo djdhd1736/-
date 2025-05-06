@@ -4,61 +4,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>대리운전 시뮬레이션 (마인드세분 수정)</title>
+    <title>대리운전 시뮬레이션 + 랭킹</title>
     <style>
-        body { font-family: sans-serif; background: #222; color: #fff; text-align: center; margin: 0; padding: 0; }
-        #game-container { background: #333; padding: 10px; margin: 20px auto; width: 90%; max-width: 400px; border-radius: 10px; }
+        body { font-family: sans-serif; background-color: #f0f0f0; text-align: center; margin: 0; padding: 0; }
+        #game-container { background: white; padding: 10px; margin: 20px auto; width: 90%; max-width: 400px; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
+        .status { margin: 5px 0; font-size: 14px; }
         button { margin: 5px; padding: 10px; font-size: 14px; width: 90%; max-width: 300px; }
-        img { max-width: 100%; height: auto; margin: 10px 0; }
-        .status, #event-description, #ranking { margin: 5px 0; font-size: 14px; }
+        #event-img { width: 90%; height: auto; margin-top: 10px; display: none; }
+        .char-description { font-size: 12px; color: #333; margin-bottom: 10px; }
+        #event-description { font-size: 13px; margin-top: 5px; color: #555; }
+        #rankingArea { background: #fff; padding: 10px; margin: 10px auto; width: 90%; max-width: 400px; }
     </style>
-</head>
-<body>
-    <div id="game-container">
-        <h1>대리운전 시뮬레이션</h1>
-        <div id="character-select">
-            <p>캐릭터 선택 (능력 설명):</p>
-            <div id="char-buttons"></div>
-        </div>
-        <div id="game" style="display:none;">
-            <div class="status">캐릭터: <span id="character"></span></div>
-            <div class="status">매출: <span id="revenue">0</span>원</div>
-            <div class="status">피로도: <span id="fatigue">0</span>%</div>
-            <div class="status">목표: <span id="goal">100000</span>원</div>
-            <div class="status">콜 수: <span id="turns">0</span></div>
-            <img id="event-image" src="" alt="" style="display:none;">
-            <div id="choices"></div>
-        </div>
-        <div id="ranking" style="display:none;">
-            <h2>랭킹</h2>
-            <ul id="ranking-list"></ul>
-            <button onclick="resetGame()">게임 재시작</button>
-        </div>
-    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
-    <audio id="button-sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
-    <audio id="event-sound" src="https://www.soundjay.com/buttons/sounds/button-6.mp3"></audio>
-    <audio id="end-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCxRz9AGs1ADcSDkXSRwpxQj6J6T5U0Rls",
+            authDomain: "daeri-b48bb.firebaseapp.com",
+            projectId: "daeri-b48bb",
+            storageBucket: "daeri-b48bb.appspot.com",
+            messagingSenderId: "354494373374",
+            appId: "1:354494373374:web:6f204c79027ddc020974af"
+        };
 
-    <script>
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         const characters = [
-            { name: '밤지기', ability: '피로도 -30% 시작' },
-            { name: '전설의대리', ability: '아무일 없음 시 피로도 50% 감소' },
-            { name: '숟가락', ability: '사고 시 피로도 50% 감소' },
-            { name: '베컴', ability: '팁 이벤트 시 총매출 10% 증가' },
-            { name: '마인드세분', ability: '맞춤콜 선택 시마다 피로도 2% 하락' },
-            { name: '장대붕어', ability: '장거리/맞춤콜 선택 시 총매출 10% 증가' },
-            { name: '미호이주', ability: '진상손님 이벤트 발생 시 총매출 20% 증가' },
-            { name: '오필승콜이야', ability: '콜 선택마다 총매출·피로도 5% 추가 증가' },
-            { name: '대붕이타마', ability: '경유 이벤트 발생 시 총매출 20% 증가' },
-            { name: '럭키네오', ability: '매너손님 이벤트 발생 시 총매출 20% 증가' },
-            { name: '메탄시라소니', ability: '사고 이벤트 발생 시 총매출 20% 증가' },
-            { name: '대깨강김홍식', ability: '콜취소 이벤트 발생 시 피로도 20% 감소' },
-            { name: '리정자', ability: '진상손님 이벤트 발생 시 총매출 20% 증가' },
-            { name: '정의사신', ability: '착변 이벤트 발생 시 총매출 20% 증가' }
+            { name: '밤지기', ability: '피로도 -50% 시작' },
+            { name: '전설의대리', ability: '아무일 없음 시 피로도 절반' },
+            { name: '숟가락', ability: '사고 확률 감소' },
+            { name: '베컴', ability: '팁 2배' },
+            { name: '마인드세분', ability: '10% 확률 피로도 초기화' },
+            { name: '장대붕어', ability: '장거리/카카오/맞춤콜 다음 2배' },
+            { name: '미호이주', ability: '진상손님 매출 2배' },
+            { name: '오필승코리아', ability: '매출·피로도 1.5배' },
+            { name: '대붕이타마', ability: '경유 다음콜 2배' },
+            { name: '럭키네오', ability: '매너손님 다음콜 2배' },
+            { name: '메탄시라소니', ability: '사고 후 다음콜 2배' },
+            { name: '대깨강김홍식', ability: '콜취소시 피로도 절반' }
         ];
+
+        const events = [
+            { name: '팁을 받았다', description: '피로도 감소, 매출 증가', img: 'https://i.imgur.com/WFWoTZX.jpeg' },
+            { name: '진상손님', description: '피로도 크게 증가', img: 'https://i.imgur.com/yaXRNVx.jpeg' },
+            { name: '매너손님', description: '피로도 감소', img: 'https://i.imgur.com/VzLkotH.jpeg' },
+            { name: '사고발생', description: '피로도 증가, 매출 감소', img: 'https://i.imgur.com/PhTKoAa.jpeg' },
+            { name: '콜취소', description: '피로도 소폭 증가', img: 'https://i.imgur.com/quMoFAr.jpeg' },
+            { name: '아무일 없음', description: '변화 없음', img: 'https://i.imgur.com/j5Zadsd.jpeg' },
+            { name: '경유', description: '매출 소폭 증가', img: 'https://i.imgur.com/lDTp7kk.jpeg' },
+            { name: '착변', description: '매출 소폭 증가', img: 'https://i.imgur.com/O3pdLMQ.jpeg' },
+            { name: '숟가락 회원 만남', description: '피로도 크게 감소', img: 'https://i.imgur.com/4dvrd8S.jpeg' }
+        ];
+
         let selectedCharacter = '';
-        let revenue = 0, fatigue = 0, goal = 100000, turns = 0;
+        let revenue = 0;
+        let fatigue = 0;
+        let goal = 100000;
+        let turns = 0;
+
+        window.selectCharacter = function(charName) {
+            selectedCharacter = charName;
+            document.getElementById('character').textContent = charName;
+            document.getElementById('character-select').style.display = 'none';
+            document.getElementById('game').style.display = 'block';
+            if (charName === '밤지기') fatigue = -50;
+            updateDisplay();
+            setupChoices();
+        }
+
+        function updateDisplay() {
+            document.getElementById('revenue').textContent = revenue;
+            document.getElementById('fatigue').textContent = Math.max(fatigue, 0);
+            document.getElementById('goal').textContent = goal;
+            document.getElementById('turns').textContent = turns;
+        }
+
+        function setupChoices() {
+            const container = document.getElementById('choices');
+            container.innerHTML = '';
+            const shuffled = choices.sort(() => 0.5 - Math.random());
+            const selected = shuffled.slice(0, Math.floor(Math.random() * 2) + 3);
+            selected.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.textContent = choice.name;
+                btn.onclick = () => handleChoice(choice);
+                container.appendChild(btn);
+            });
+        }
+
+        async function handleChoice(choice) {
+            turns++;
+            let actualFatigue = choice.fatigue;
+            let actualRevenue = Math.floor(Math.random() * (choice.max - choice.min + 1)) + choice.min;
+            revenue += actualRevenue;
+            fatigue += actualFatigue;
+
+            const event = events[Math.floor(Math.random() * events.length)];
+            document.getElementById('event-img').src = event.img;
+            document.getElementById('event-img').style.display = 'block';
+            document.getElementById('event-description').textContent = `${event.name}: ${event.description}`;
+
+            if (fatigue >= 100) {
+                await endGame();
+            } else if (revenue >= goal) {
+                alert(`목표 ${goal}원 달성! 다음 라운드로 갑니다.`);
+                goal *= 2;
+            }
+
+            updateDisplay();
+            setupChoices();
+        }
+
+        async function endGame() {
+            alert(`게임 종료! 총 콜 수: ${turns}, 최종 매출: ${revenue}원`);
+            const name = prompt("닉네임을 입력하세요:");
+            if (name) {
+                await addDoc(collection(db, "rankings"), {
+                    player: name,
+                    sales: revenue,
+                    calls: turns,
+                    timestamp: new Date()
+                });
+                showRankings();
+            }
+            resetGame();
+        }
+
+        async function showRankings() {
+            const area = document.getElementById('rankingArea');
+            area.innerHTML = "<h2>🏆 상위 랭킹</h2>";
+            const q = query(collection(db, "rankings"), orderBy("sales", "desc"), limit(5));
+            const snapshot = await getDocs(q);
+            snapshot.forEach((doc, idx) => {
+                const data = doc.data();
+                const p = document.createElement('p');
+                p.textContent = `${idx + 1}위 - ${data.player}: ${data.sales}원 (${data.calls}콜)`;
+                area.appendChild(p);
+            });
+        }
+
+        function resetGame() {
+            revenue = 0;
+            fatigue = 0;
+            goal = 100000;
+            turns = 0;
+            document.getElementById('game').style.display = 'none';
+            document.getElementById('character-select').style.display = 'block';
+        }
 
         const choices = [
             { name: '장거리콜', fatigue: 20, min: 50000, max: 100000 },
@@ -70,129 +164,38 @@
             { name: '콜마너', fatigue: 15, min: 15000, max: 70000 }
         ];
 
-        const events = [
-            { name: '팁', img: 'https://i.imgur.com/WFWoTZX.jpeg', effect: () => { revenue += 5000; fatigue -= 5; if (selectedCharacter === '베컴') revenue *= 1.1; return '+5000원, 피로도 -5%'; } },
-            { name: '진상손님', img: 'https://i.imgur.com/yaXRNVx.jpeg', effect: () => { fatigue += 20; if (['미호이주', '리정자'].includes(selectedCharacter)) revenue *= 1.2; return '피로도 +20%'; } },
-            { name: '매너손님', img: 'https://i.imgur.com/VzLkotH.jpeg', effect: () => { fatigue -= 10; if (selectedCharacter === '럭키네오') revenue *= 1.2; return '피로도 -10%'; } },
-            { name: '사고', img: 'https://i.imgur.com/PhTKoAa.jpeg', effect: () => { fatigue += 30; revenue -= 300000; if (selectedCharacter === '숟가락') fatigue *= 0.5; if (selectedCharacter === '메탄시라소니') revenue *= 1.2; return '-300,000원, 피로도 +30%'; } },
-            { name: '콜취소', img: 'https://i.imgur.com/quMoFAr.jpeg', effect: () => { fatigue += 5; if (selectedCharacter === '대깨강김홍식') fatigue *= 0.8; return '피로도 +5%'; } },
-            { name: '아무일 없음', img: 'https://i.imgur.com/j5Zadsd.jpeg', effect: () => { if (selectedCharacter === '전설의대리') fatigue *= 0.5; return '변화 없음'; } },
-            { name: '경유', img: 'https://i.imgur.com/lDTp7kk.jpeg', effect: () => { let amount = Math.floor(Math.random() * 15000) + 5000; revenue += amount; if (selectedCharacter === '대붕이타마') revenue *= 1.2; return `+${amount}원`; } },
-            { name: '착변', img: 'https://i.imgur.com/O3pdLMQ.jpeg', effect: () => { let amount = Math.floor(Math.random() * 15000) + 5000; revenue += amount; if (selectedCharacter === '정의사신') revenue *= 1.2; return `+${amount}원`; } }
-        ];
-
-        function playSound(id) {
-            const audio = document.getElementById(id);
-            if (audio) { audio.currentTime = 0; audio.play(); }
-        }
-
-        function selectCharacter(name) {
-            selectedCharacter = name;
-            document.getElementById('character').textContent = name;
-            document.getElementById('character-select').style.display = 'none';
-            document.getElementById('game').style.display = 'block';
-            if (name === '밤지기') fatigue -= 30;
-            updateDisplay();
-            setupChoices();
-        }
-
-        function updateDisplay() {
-            document.getElementById('revenue').textContent = Math.floor(revenue);
-            document.getElementById('fatigue').textContent = Math.max(fatigue, 0);
-            document.getElementById('goal').textContent = goal;
-            document.getElementById('turns').textContent = turns;
-        }
-
-        function setupChoices() {
-            const container = document.getElementById('choices');
-            container.innerHTML = '';
-            const randomChoices = choices.sort(() => 0.5 - Math.random()).slice(0, 4);
-            randomChoices.forEach(choice => {
-                const btn = document.createElement('button');
-                btn.textContent = choice.name;
-                btn.onclick = () => handleChoice(choice);
-                container.appendChild(btn);
-            });
-        }
-
-        function handleChoice(choice) {
-            playSound('button-sound');
-            turns++;
-            let actualRevenue = Math.floor(Math.random() * (choice.max - choice.min + 1)) + choice.min;
-            revenue += actualRevenue;
-            fatigue += choice.fatigue;
-
-            if (selectedCharacter === '마인드세분' && choice.name === '맞춤콜') {
-                fatigue -= 2;
-            }
-
-            const event = events[Math.floor(Math.random() * events.length)];
-            const eventResult = event.effect();
-            const imgEl = document.getElementById('event-image');
-            imgEl.src = event.img;
-            imgEl.style.display = 'block';
-            playSound('event-sound');
-
-            alert(`이벤트: ${event.name}
-결과: ${eventResult}
-현재 매출: ${Math.floor(revenue)}원, 피로도: ${Math.floor(fatigue)}%`);
-
-            if (fatigue >= 100) {
-                endGame();
-                return;
-            } else if (revenue >= goal) {
-                alert(`목표 ${goal}원 달성! 다음 라운드로 갑니다.`);
-                goal *= 2;
-            }
-
-            updateDisplay();
-            setupChoices();
-        }
-
-        function endGame() {
-            playSound('end-sound');
-            alert(`게임 종료! 최종 매출: ${Math.floor(revenue)}원, 총 콜 수: ${turns}`);
-            const nickname = prompt(`닉네임을 입력하세요 (취소하면 재시작됩니다):`);
-            if (nickname) {
-                const ranking = JSON.parse(localStorage.getItem('ranking') || '[]');
-                ranking.push({ name: nickname, score: revenue });
-                ranking.sort((a, b) => b.score - a.score);
-                localStorage.setItem('ranking', JSON.stringify(ranking));
-                showRanking(ranking);
-            } else {
-                resetGame();
-            }
-        }
-
-        function showRanking(ranking) {
-            document.getElementById('game').style.display = 'none';
-            const list = document.getElementById('ranking-list');
-            list.innerHTML = '';
-            ranking.slice(0, 10).forEach(entry => {
-                const li = document.createElement('li');
-                li.textContent = `${entry.name}: ${Math.floor(entry.score)}원`;
-                list.appendChild(li);
-            });
-            document.getElementById('ranking').style.display = 'block';
-        }
-
-        function resetGame() {
-            revenue = 0; fatigue = 0; goal = 100000; turns = 0;
-            document.getElementById('ranking').style.display = 'none';
-            document.getElementById('game').style.display = 'none';
-            document.getElementById('character-select').style.display = 'block';
-        }
-
-        window.onload = () => {
-            const btns = document.getElementById('char-buttons');
-            btns.innerHTML = '';
+        function loadCharacterButtons() {
+            const container = document.getElementById('char-buttons');
             characters.forEach(char => {
-                const b = document.createElement('button');
-                b.textContent = `${char.name}: ${char.ability}`;
-                b.onclick = () => selectCharacter(char.name);
-                btns.appendChild(b);
+                const div = document.createElement('div');
+                div.innerHTML = `<button onclick="selectCharacter('${char.name}')">${char.name}</button>
+                                 <div class="char-description">${char.ability}</div>`;
+                container.appendChild(div);
             });
-        };
+        }
+
+        loadCharacterButtons();
     </script>
+</head>
+<body>
+    <div id="game-container">
+        <h1>대리운전 시뮬레이션</h1>
+        <div id="character-select">
+            <p>캐릭터를 선택하세요:</p>
+            <div id="char-buttons"></div>
+        </div>
+        <div id="game" style="display:none;">
+            <div class="status">선택된 캐릭터: <span id="character"></span></div>
+            <div class="status">매출: <span id="revenue">0</span>원</div>
+            <div class="status">피로도: <span id="fatigue">0</span>%</div>
+            <div class="status">목표: <span id="goal">100000</span>원</div>
+            <div class="status">콜 수: <span id="turns">0</span></div>
+            <div id="message">랜덤 콜을 선택하세요:</div>
+            <div id="choices"></div>
+            <img id="event-img" src="" alt="이벤트 이미지">
+            <div id="event-description"></div>
+        </div>
+    </div>
+    <div id="rankingArea"></div>
 </body>
 </html>
