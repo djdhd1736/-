@@ -9,7 +9,7 @@
         #game-container { background: white; padding: 20px; margin: 50px auto; width: 400px; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
         .status { margin: 10px 0; }
         button { margin: 5px; padding: 10px 20px; }
-        #event-img { width: 300px; height: auto; margin-top: 10px; }
+        #event-img { width: 300px; height: auto; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -20,7 +20,7 @@
         <div class="status">목표: <span id="goal">100000</span>원</div>
         <div id="message">다음 콜을 선택하세요:</div>
         <div id="choices"></div>
-        <img id="event-img" src="images/placeholder.jpg" alt="이벤트 이미지">
+        <img id="event-img" src="" alt="이벤트 이미지">
     </div>
 
     <script>
@@ -35,15 +35,15 @@
         ];
 
         const events = [
-            { name: '팁을 받았다', fatigueChange: -5, revenueMin: 5000, revenueMax: 10000, img: 'images/tip.jpg' },
-            { name: '진상손님', fatigueChange: 20, revenueMin: 0, revenueMax: 0, img: 'images/jin.jpg' },
-            { name: '매너손님', fatigueChange: -10, revenueMin: 0, revenueMax: 0, img: 'images/manner.jpg' },
-            { name: '사고발생', fatigueChange: 30, revenueMin: -300000, revenueMax: -300000, img: 'images/accident.jpg' },
-            { name: '콜취소', fatigueChange: 5, revenueMin: 0, revenueMax: 0, img: 'images/cancel.jpg' },
-            { name: '아무일 없음', fatigueChange: 0, revenueMin: 0, revenueMax: 0, img: 'images/nothing.jpg' },
-            { name: '경유', fatigueChange: 0, revenueMin: 5000, revenueMax: 20000, img: 'images/fuel.jpg' },
-            { name: '착변', fatigueChange: 0, revenueMin: 5000, revenueMax: 20000, img: 'images/change.jpg' },
-            { name: '숟가락 회원 만남', fatigueChange: -20, revenueMin: 0, revenueMax: 0, img: 'images/spoon.jpg' }
+            { name: '팁을 받았다', fatigueChange: -5, revenueMin: 5000, revenueMax: 10000, img: 'https://i.imgur.com/WFWoTZX.jpeg' },
+            { name: '진상손님', fatigueChange: 20, revenueMin: 0, revenueMax: 0, img: 'https://i.imgur.com/yaXRNVx.jpeg' },
+            { name: '매너손님', fatigueChange: -10, revenueMin: 0, revenueMax: 0, img: 'https://i.imgur.com/VzLkotH.jpeg' },
+            { name: '사고발생', fatigueChange: 30, revenueMin: -300000, revenueMax: -300000, img: 'https://i.imgur.com/PhTKoAa.jpeg' },
+            { name: '콜취소', fatigueChange: 5, revenueMin: 0, revenueMax: 0, img: 'https://i.imgur.com/quMoFAr.jpeg' },
+            { name: '아무일 없음', fatigueChange: 0, revenueMin: 0, revenueMax: 0, img: 'https://i.imgur.com/j5Zadsd.jpeg' },
+            { name: '경유', fatigueChange: 0, revenueMin: 5000, revenueMax: 20000, img: 'https://i.imgur.com/lDTp7kk.jpeg' },
+            { name: '착변', fatigueChange: 0, revenueMin: 5000, revenueMax: 20000, img: 'https://i.imgur.com/O3pdLMQ.jpeg' },
+            { name: '숟가락 회원 만남', fatigueChange: -20, revenueMin: 0, revenueMax: 0, img: 'https://i.imgur.com/4dvrd8S.jpeg' }
         ];
 
         let revenue = 0;
@@ -81,7 +81,13 @@
 
             if (fatigue < 0) fatigue = 0;
             document.getElementById('message').textContent = `${event.name} 발생!`;
-            document.getElementById('event-img').src = event.img;
+            const imgTag = document.getElementById('event-img');
+            if (event.img) {
+                imgTag.src = event.img;
+                imgTag.style.display = 'block';
+            } else {
+                imgTag.style.display = 'none';
+            }
 
             if (fatigue >= 100) {
                 alert('피로도가 100%를 초과했습니다. 게임 오버!');
