@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>대리운전 시뮬레이션 (랭킹 리셋 수정)</title>
+    <title>대리운전 시뮬레이션 (팝업 + 이미지 + 효과음)</title>
     <style>
         body { font-family: sans-serif; background: #222; color: #fff; text-align: center; margin: 0; padding: 0; }
         #game-container { background: #333; padding: 10px; margin: 20px auto; width: 90%; max-width: 400px; border-radius: 10px; }
@@ -26,7 +26,6 @@
             <div class="status">피로도: <span id="fatigue">0</span>%</div>
             <div class="status">목표: <span id="goal">100000</span>원</div>
             <div class="status">콜 수: <span id="turns">0</span></div>
-            <div id="event-description"></div>
             <img id="event-image" src="" alt="" style="display:none;">
             <div id="choices"></div>
         </div>
@@ -37,9 +36,9 @@
         </div>
     </div>
 
-    <audio id="button-sound" src="https://www.soundjay.com/buttons/button-16.mp3"></audio>
-    <audio id="event-sound" src="https://www.soundjay.com/buttons/button-09.mp3"></audio>
-    <audio id="end-sound" src="https://www.soundjay.com/buttons/button-10.mp3"></audio>
+    <audio id="button-sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+    <audio id="event-sound" src="https://www.soundjay.com/buttons/sounds/button-6.mp3"></audio>
+    <audio id="end-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
 
     <script>
         const characters = [
@@ -83,8 +82,8 @@
         ];
 
         function playSound(id) {
-            const sound = document.getElementById(id);
-            if (sound) { sound.currentTime = 0; sound.play(); }
+            const audio = document.getElementById(id);
+            if (audio) { audio.currentTime = 0; audio.play(); }
         }
 
         function selectCharacter(name) {
@@ -125,19 +124,14 @@
 
             const event = events[Math.floor(Math.random() * events.length)];
             const eventResult = event.effect();
-            document.getElementById('event-description').textContent = `${event.name} 발생!`;
             const imgEl = document.getElementById('event-image');
             imgEl.src = event.img;
             imgEl.style.display = 'block';
-
-            if (selectedCharacter === '마인드세분' && choice.name === '맞춤콜') fatigue -= 2;
-            if (selectedCharacter === '장대붕어' && (choice.name === '장거리콜' || choice.name === '맞춤콜')) revenue *= 1.1;
-            if (selectedCharacter === '오필승콜이야') { revenue *= 1.05; fatigue *= 1.05; }
-
-            alert(`이벤트 결과:
-${event.name} → ${eventResult}
-현재 매출: ${Math.floor(revenue)}원, 피로도: ${Math.max(fatigue, 0)}%`);
             playSound('event-sound');
+
+            alert(`이벤트: ${event.name}
+결과: ${eventResult}
+현재 매출: ${Math.floor(revenue)}원, 피로도: ${Math.floor(fatigue)}%`);
 
             if (fatigue >= 100) {
                 endGame();
