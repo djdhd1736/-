@@ -3,52 +3,92 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>대리운전 시뮬레이션</title>
     <style>
-        body { font-family: sans-serif; background-color: #f0f0f0; margin: 0; padding: 0; text-align: center; }
-        #game-container { background: white; padding: 5px; margin: 0 auto; max-width: 150px; box-shadow: 0 0 5px rgba(0,0,0,0.3); }
-        h1 { font-size: 1em; }
-        .status { margin: 5px 0; font-size: 0.8em; }
-        button { margin: 3px; padding: 5px 10px; font-size: 0.7em; width: 95%; max-width: 120px; }
-        #event-img { width: 95%; height: auto; margin-top: 5px; display: none; }
-        #description { margin-top: 10px; font-size: 0.7em; color: #555; text-align: left; padding: 0 3px; }
-        #description ul { list-style: none; padding-left: 0; }
+        body { font-family: sans-serif; background-color: #f0f0f0; text-align: center; margin: 0; padding: 0; }
+        #game-container { background: white; padding: 10px; margin: 20px auto; width: 90%; max-width: 400px; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
+        .status { margin: 5px 0; font-size: 14px; }
+        button { margin: 5px; padding: 10px; font-size: 14px; width: 90%; max-width: 300px; }
+        #event-img { width: 90%; height: auto; margin-top: 10px; display: none; }
+        .char-description { font-size: 12px; color: #333; margin-bottom: 10px; }
+        #event-description { font-size: 13px; margin-top: 5px; color: #555; }
     </style>
 </head>
 <body>
     <div id="game-container">
         <h1>대리운전 시뮬레이션</h1>
-        <div class="status">매출: <span id="revenue">0</span>원</div>
-        <div class="status">피로도: <span id="fatigue">0</span>%</div>
-        <div class="status">목표: <span id="goal">100000</span>원</div>
-        <div id="message">다음 콜을 선택하세요:</div>
-        <div id="choices"></div>
-        <img id="event-img" src="" alt="이벤트 이미지">
 
-        <audio id="click-sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_329e799b97.mp3?filename=button-124476.mp3"></audio>
-        <audio id="event-sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_1c56c1f79c.mp3?filename=notification-124473.mp3"></audio>
+        <div id="character-select">
+            <p>캐릭터를 선택하세요:</p>
+            <div id="char-buttons"></div>
+        </div>
 
-        <div id="description">
-            <p><strong>※ 게임 설명:</strong></p>
-            <ul>
-                <li>각 버튼을 눌러 콜을 선택하세요 (클릭 시 효과음).</li>
-                <li>랜덤 이벤트가 발생하며, 매출과 피로도가 변합니다 (이벤트 시 효과음).</li>
-                <li><strong>팁을 받았다:</strong> 피로도 감소, 매출 소폭 증가.</li>
-                <li><strong>진상손님:</strong> 피로도 크게 증가.</li>
-                <li><strong>매너손님:</strong> 피로도 감소.</li>
-                <li><strong>사고발생:</strong> 피로도 크게 증가, 매출 크게 감소.</li>
-                <li><strong>콜취소:</strong> 피로도 약간 증가.</li>
-                <li><strong>아무일 없음:</strong> 변화 없음.</li>
-                <li><strong>경유/착변:</strong> 매출 소폭 증가.</li>
-                <li><strong>숟가락 회원 만남:</strong> 피로도 크게 감소.</li>
-                <li>피로도가 100%가 되면 게임 오버.</li>
-                <li>목표 매출 달성 시 다음 라운드로 넘어갑니다 (목표 x2).</li>
-            </ul>
+        <div id="game" style="display:none;">
+            <div class="status">선택된 캐릭터: <span id="character"></span></div>
+            <div class="status">매출: <span id="revenue">0</span>원</div>
+            <div class="status">피로도: <span id="fatigue">0</span>%</div>
+            <div class="status">목표: <span id="goal">100000</span>원</div>
+            <div id="message">다음 콜을 선택하세요:</div>
+            <div id="choices"></div>
+            <img id="event-img" src="" alt="이벤트 이미지">
+            <div id="event-description"></div>
         </div>
     </div>
 
     <script>
+        const characters = [
+            { name: '밤지기', ability: '피로도 -50% 시작' },
+            { name: '전설의대리', ability: '아무일 없음 시 피로도 절반' },
+            { name: '숟가락', ability: '사고 확률 감소' },
+            { name: '베컴', ability: '팁 2배' },
+            { name: '마인드세분', ability: '10% 확률 피로도 초기화' },
+            { name: '장대붕어', ability: '장거리/카카오/맞춤콜 다음 2배' },
+            { name: '미호이주', ability: '진상손님 매출 2배' },
+            { name: '오필승코리아', ability: '매출·피로도 1.5배' },
+            { name: '대붕이타마', ability: '경유 다음콜 2배' },
+            { name: '럭키네오', ability: '매너손님 다음콜 2배' },
+            { name: '메탄시라소니', ability: '사고 후 다음콜 2배' },
+            { name: '대깨강김홍식', ability: '콜취소시 피로도 절반' }
+        ];
+
+        const events = [
+            { name: '팁을 받았다', description: '피로도 감소, 매출 증가', img: 'https://i.imgur.com/WFWoTZX.jpeg' },
+            { name: '진상손님', description: '피로도 크게 증가', img: 'https://i.imgur.com/yaXRNVx.jpeg' },
+            { name: '매너손님', description: '피로도 감소', img: 'https://i.imgur.com/VzLkotH.jpeg' },
+            { name: '사고발생', description: '피로도 증가, 매출 감소', img: 'https://i.imgur.com/PhTKoAa.jpeg' },
+            { name: '콜취소', description: '피로도 소폭 증가', img: 'https://i.imgur.com/quMoFAr.jpeg' },
+            { name: '아무일 없음', description: '변화 없음', img: 'https://i.imgur.com/j5Zadsd.jpeg' },
+            { name: '경유', description: '매출 소폭 증가', img: 'https://i.imgur.com/lDTp7kk.jpeg' },
+            { name: '착변', description: '매출 소폭 증가', img: 'https://i.imgur.com/O3pdLMQ.jpeg' },
+            { name: '숟가락 회원 만남', description: '피로도 크게 감소', img: 'https://i.imgur.com/4dvrd8S.jpeg' }
+        ];
+
+        let selectedCharacter = '';
+        let revenue = 0;
+        let fatigue = 0;
+        let goal = 100000;
+
+        function loadCharacterButtons() {
+            const container = document.getElementById('char-buttons');
+            characters.forEach(char => {
+                const div = document.createElement('div');
+                div.innerHTML = `<button onclick="selectCharacter('${char.name}')">${char.name}</button>
+                                 <div class="char-description">${char.ability}</div>`;
+                container.appendChild(div);
+            });
+        }
+
+        function selectCharacter(charName) {
+            selectedCharacter = charName;
+            document.getElementById('character').textContent = charName;
+            document.getElementById('character-select').style.display = 'none';
+            document.getElementById('game').style.display = 'block';
+            if (charName === '밤지기') fatigue = -50;
+            updateDisplay();
+            setupChoices();
+        }
+
         const choices = [
             { name: '장거리콜', fatigue: 20, min: 50000, max: 100000 },
             { name: '단거리콜', fatigue: 5, min: 10000, max: 20000 },
@@ -59,30 +99,10 @@
             { name: '콜마너', fatigue: 15, min: 15000, max: 70000 }
         ];
 
-        const events = [
-            { name: '팁을 받았다', fatigueChange: -5, revenueMin: 5000, revenueMax: 10000, img: 'https://i.imgur.com/WFWoTZX.jpeg' },
-            { name: '진상손님', fatigueChange: 20, revenueMin: 0, revenueMax: 0, img: 'https://i.imgur.com/yaXRNVx.jpeg' },
-            { name: '매너손님', fatigueChange: -10, revenueMin: 0, revenueMax: 0, img: 'https://i.imgur.com/VzLkotH.jpeg' },
-            { name: '사고발생', fatigueChange: 30, revenueMin: -300000, revenueMax: -300000, img: 'https://i.imgur.com/PhTKoAa.jpeg' },
-            { name: '콜취소', fatigueChange: 5, revenueMin: 0, revenueMax: 0, img: 'https://i.imgur.com/quMoFAr.jpeg' },
-            { name: '아무일 없음', fatigueChange: 0, revenueMin: 0, revenueMax: 0, img: 'https://i.imgur.com/j5Zadsd.jpeg' },
-            { name: '경유', fatigueChange: 0, revenueMin: 5000, revenueMax: 20000, img: 'https://i.imgur.com/lDTp7kk.jpeg' },
-            { name: '착변', fatigueChange: 0, revenueMin: 5000, revenueMax: 20000, img: 'https://i.imgur.com/O3pdLMQ.jpeg' },
-            { name: '숟가락 회원 만남', fatigueChange: -20, revenueMin: 0, revenueMax: 0, img: 'https://i.imgur.com/4dvrd8S.jpeg' }
-        ];
-
-        let revenue = 0;
-        let fatigue = 0;
-        let goal = 100000;
-
         function updateDisplay() {
             document.getElementById('revenue').textContent = revenue;
-            document.getElementById('fatigue').textContent = fatigue;
+            document.getElementById('fatigue').textContent = Math.max(fatigue, 0);
             document.getElementById('goal').textContent = goal;
-        }
-
-        function randomEvent() {
-            return events[Math.floor(Math.random() * events.length)];
         }
 
         function setupChoices() {
@@ -97,25 +117,15 @@
         }
 
         function handleChoice(choice) {
-            document.getElementById('click-sound').play();
-            revenue += Math.floor(Math.random() * (choice.max - choice.min + 1)) + choice.min;
-            fatigue += choice.fatigue;
+            let actualFatigue = choice.fatigue;
+            let actualRevenue = Math.floor(Math.random() * (choice.max - choice.min + 1)) + choice.min;
+            revenue += actualRevenue;
+            fatigue += actualFatigue;
 
-            const event = randomEvent();
-            revenue += Math.floor(Math.random() * (event.revenueMax - event.revenueMin + 1)) + event.revenueMin;
-            fatigue += event.fatigueChange;
-
-            document.getElementById('event-sound').play();
-
-            if (fatigue < 0) fatigue = 0;
-            document.getElementById('message').textContent = `${event.name} 발생!`;
-            const imgTag = document.getElementById('event-img');
-            if (event.img) {
-                imgTag.src = event.img;
-                imgTag.style.display = 'block';
-            } else {
-                imgTag.style.display = 'none';
-            }
+            const event = events[Math.floor(Math.random() * events.length)];
+            document.getElementById('event-img').src = event.img;
+            document.getElementById('event-img').style.display = 'block';
+            document.getElementById('event-description').textContent = `${event.name}: ${event.description}`;
 
             if (fatigue >= 100) {
                 alert('피로도가 100%를 초과했습니다. 게임 오버!');
@@ -130,8 +140,7 @@
             updateDisplay();
         }
 
-        updateDisplay();
-        setupChoices();
+        loadCharacterButtons();
     </script>
 </body>
 </html>
