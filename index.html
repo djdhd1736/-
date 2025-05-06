@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>대리운전 시뮬레이션</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f0f0; text-align: center; }
+        #game-container { background: white; padding: 20px; margin: 50px auto; width: 400px; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
+        .status { margin: 10px 0; }
+        button { margin: 5px; padding: 10px 20px; }
+        #event-img { width: 300px; height: auto; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>대리운전 시뮬레이션</h1>
+        <div class="status">매출: <span id="revenue">0</span>원</div>
+        <div class="status">피로도: <span id="fatigue">0</span>%</div>
+        <div class="status">목표: <span id="goal">100000</span>원</div>
+        <div id="message">다음 콜을 선택하세요:</div>
+        <div id="choices"></div>
+        <img id="event-img" src="placeholder.jpg" alt="이벤트 이미지">
+    </div>
+
+    <script>
+        const choices = [
+            { name: '장거리콜', fatigue: 20, min: 50000, max: 100000 },
+            { name: '단거리콜', fatigue: 5, min: 10000, max: 20000 },
+            { name: '맞춤콜', fatigue: 5, min: 20000, max: 40000 },
+            { name: '카카오', fatigue: 15, min: 20000, max: 60000 },
+            { name: '로지', fatigue: 15, min: 10000, max: 80000 },
+            { name: '티맵', fatigue: 15, min: 8000, max: 40000 },
+            { name: '콜마너', fatigue: 15, min: 15000, max: 70000 }
+        ];
+
+        const events = [
+            { name: '팁을 받았다', fatigueChange: -5, revenueMin: 5000, revenueMax: 10000, img: 'tip.jpg' },
+            { name: '진상손님', fatigueChange: 20, revenueMin: 0, revenueMax: 0, img: 'jin.jpg' },
+            { name: '매너손님', fatigueChange: -10, revenueMin: 0, revenueMax: 0, img: 'manner.jpg' },
+            { name: '사고발생', fatigueChange: 30, revenueMin: -300000, revenueMax: -300000, img: 'accident.jpg' },
+            { name: '콜취소', fatigueChange: 5, revenueMin: 0, revenueMax: 0, img: 'cancel.jpg' },
+            { name: '아무일 없음', fatigueChange: 0, revenueMin: 0, revenueMax: 0, img: 'nothing.jpg' },
+            { name: '경유', fatigueChange: 0, revenueMin: 5000, revenueMax: 20000, img: 'fuel.jpg' },
+            { name: '착변', fatigueChange: 0, revenueMin: 5000, revenueMax: 20000, img: 'change.jpg' },
+            { name: '숟가락 회원 만남', fatigueChange: -20, revenueMin: 0, revenueMax: 0, img: 'spoon.jpg' }
+        ];
+
+        let revenue = 0;
+        let fatigue = 0;
+        let goal = 100000;
+
+        function updateDisplay() {
+            document.getElementById('revenue').textContent = revenue;
+            document.getElementById('fatigue').textContent = fatigue;
+            document.getElementById('goal').textContent = goal;
+        }
+
+        function randomEvent() {
+            return events[Math.floor(Math.random() * events.length)];
+        }
+
+        function setupChoices() {
+            const container = document.getElementById('choices');
+            container.innerHTML = '';
+            choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.textContent = choice.name;
+                btn.onclick = () => handleChoice(choice);
+                container.appendChild(btn);
+            });
+        }
+
+        function handleChoice(choice) {
+            revenue += Math.floor(Math.random() * (choice.max - choice.min + 1)) + choice.min;
+            fatigue += choice.fatigue;
+
+            const event = randomEvent();
+            revenue += Math.floor(Math.random() * (event.revenueMax - event.revenueMin + 1)) + event.revenueMin;
+            fatigue += event.fatigueChange;
+
+            if (fatigue < 0) fatigue = 0;
+            document.getElementById('message').textContent = `${event.name} 발생!`;
+            document.getElementById('event-img').src = event.img;
+
+            if (fatigue >= 100) {
+                alert('피로도가 100%를 초과했습니다. 게임 오버!');
+                revenue = 0;
+                fatigue = 0;
+                goal = 100000;
+            } else if (revenue >= goal) {
+                alert(`목표 ${goal}원 달성! 다음 라운드로 갑니다.`);
+                goal *= 2;
+            }
+
+            updateDisplay();
+        }
+
+        updateDisplay();
+        setupChoices();
+    </script>
+</body>
+</html>
