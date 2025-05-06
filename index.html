@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>대리운전 시뮬레이션 (팝업 + 이미지 + 효과음)</title>
+    <title>대리운전 시뮬레이션 (마인드세분 수정)</title>
     <style>
         body { font-family: sans-serif; background: #222; color: #fff; text-align: center; margin: 0; padding: 0; }
         #game-container { background: #333; padding: 10px; margin: 20px auto; width: 90%; max-width: 400px; border-radius: 10px; }
@@ -121,6 +121,10 @@
             let actualRevenue = Math.floor(Math.random() * (choice.max - choice.min + 1)) + choice.min;
             revenue += actualRevenue;
             fatigue += choice.fatigue;
+
+            if (selectedCharacter === '마인드세분' && choice.name === '맞춤콜') {
+                fatigue -= 2;
+            }
 
             const event = events[Math.floor(Math.random() * events.length)];
             const eventResult = event.effect();
