@@ -74,23 +74,23 @@
 
         const choices = [
             { name: '장거리콜', fatigue: 20, min: 50000, max: 100000 },
-            { name: '단거리콜', fatigue: 5, min: 10000, max: 20000 },
-            { name: '맞춤콜', fatigue: 5, min: 20000, max: 40000 },
-            { name: '카카오', fatigue: 15, min: 20000, max: 60000 },
-            { name: '로지', fatigue: 15, min: 10000, max: 80000 },
-            { name: '티맵', fatigue: 15, min: 8000, max: 40000 },
-            { name: '콜마너', fatigue: 15, min: 15000, max: 70000 }
+            { name: '단거리콜', fatigue: 5, min: 10000, max: 25000 },
+            { name: '맞춤콜', fatigue: 7, min: 30000, max: 50000 },
+            { name: '카카오', fatigue: 10, min: 20000, max: 70000 },
+            { name: '로지', fatigue: 10, min: 10000, max: 80000 },
+            { name: '티맵', fatigue: 10, min: 8000, max: 50000 },
+            { name: '콜마너', fatigue: 10, min: 15000, max: 70000 }
         ];
 
         const events = [
-            { name: '팁', img: 'https://i.imgur.com/WFWoTZX.jpeg', effect: () => { revenue += 5000; fatigue -= 5; if (selectedCharacter === '베컴') revenue *= 1.1; } },
-            { name: '진상손님', img: 'https://i.imgur.com/yaXRNVx.jpeg', effect: () => { fatigue += 20; if (['미호이주', '리정자'].includes(selectedCharacter)) revenue *= 1.2; } },
-            { name: '매너손님', img: 'https://i.imgur.com/VzLkotH.jpeg', effect: () => { fatigue -= 10; if (selectedCharacter === '럭키네오') revenue *= 1.2; } },
-            { name: '사고', img: 'https://i.imgur.com/PhTKoAa.jpeg', effect: () => { fatigue += 30; revenue -= 100000; if (selectedCharacter === '숟가락') fatigue *= 0.5; if (selectedCharacter === '메탄시라소니') revenue *= 1.2; } },
-            { name: '콜취소', img: 'https://i.imgur.com/quMoFAr.jpeg', effect: () => { fatigue += 5; if (selectedCharacter === '대깨강김홍식') fatigue *= 0.8; } },
+            { name: '팁', img: 'https://i.imgur.com/WFWoTZX.jpeg', effect: () => { revenue += 5000; fatigue -= 5; if (selectedCharacter === '베컴') revenue *= 2; } },
+            { name: '진상손님', img: 'https://i.imgur.com/yaXRNVx.jpeg', effect: () => { fatigue += 20; if (['미호이주', '리정자'].includes(selectedCharacter)) revenue *= 2; } },
+            { name: '매너손님', img: 'https://i.imgur.com/VzLkotH.jpeg', effect: () => { fatigue -= 10; if (selectedCharacter === '럭키네오') revenue *= 1.5; } },
+            { name: '사고', img: 'https://i.imgur.com/PhTKoAa.jpeg', effect: () => { fatigue += 30; revenue -= 100000; if (selectedCharacter === '숟가락') fatigue *= 0.8; if (selectedCharacter === '메탄시라소니') revenue *= 1.5; } },
+            { name: '콜취소', img: 'https://i.imgur.com/quMoFAr.jpeg', effect: () => { fatigue += 5; if (selectedCharacter === '대깨강김홍식') fatigue *= 1.2; } },
             { name: '아무일 없음', img: 'https://i.imgur.com/j5Zadsd.jpeg', effect: () => { if (selectedCharacter === '전설의대리') fatigue *= 0.5; } },
-            { name: '경유', img: 'https://i.imgur.com/lDTp7kk.jpeg', effect: () => { let amount = Math.floor(Math.random() * 15000) + 5000; revenue += amount; if (selectedCharacter === '대붕이타마') revenue *= 1.2; } },
-            { name: '착변', img: 'https://i.imgur.com/O3pdLMQ.jpeg', effect: () => { let amount = Math.floor(Math.random() * 15000) + 5000; revenue += amount; if (selectedCharacter === '정의사신') revenue *= 1.2; } }
+            { name: '경유', img: 'https://i.imgur.com/lDTp7kk.jpeg', effect: () => { let amount = Math.floor(Math.random() * 15000) + 5000; revenue += amount; if (selectedCharacter === '대붕이타마') revenue *= 2.2; } },
+            { name: '착변', img: 'https://i.imgur.com/O3pdLMQ.jpeg', effect: () => { let amount = Math.floor(Math.random() * 15000) + 5000; revenue += amount; if (selectedCharacter === '정의사신') revenue *= 2; } }
         ];
 
         function playSound(id) {
@@ -103,7 +103,7 @@
             document.getElementById('character').textContent = name;
             document.getElementById('character-select').style.display = 'none';
             document.getElementById('game').style.display = 'block';
-            if (name === '밤지기') fatigue -= 30;
+            if (name === '밤지기') fatigue -= 50;
             updateDisplay();
             setupChoices();
         }
