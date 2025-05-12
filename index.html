@@ -101,6 +101,11 @@
 
         let selectedCharacter = '';
 
+let usedItems = {
+    '전동휠': false,
+    '도박': false
+};
+
 let proChance = 2;
 let boostedEvent = false;
 
@@ -261,6 +266,7 @@ function playSound(id) {
         }
 
         function resetGame() {
+            usedItems = { '전동휠': false, '도박': false };
             revenue = 0; fatigue = 0; goal = 100000; turns = 0; proChance = 2;
             document.getElementById('game').style.display = 'none';
             document.getElementById('character-select').style.display = 'block';
@@ -289,7 +295,12 @@ window.buyItem = function(name) {
             }
             break;
         case '전동휠':
+            if (usedItems['전동휠']) {
+                alert("전동휠은 한 번만 사용할 수 있습니다.");
+                break;
+            }
             if (revenue >= 1000000) {
+                usedItems['전동휠'] = true;
                 revenue *= 2;
                 fatigue = Math.max(0, fatigue - 90);
                 alert("전동휠을 타고 다녀왔습니다! 매출이 2배, 피로도 크게 감소!");
@@ -298,7 +309,12 @@ window.buyItem = function(name) {
             }
             break;
         case '도박':
+            if (usedItems['도박']) {
+                alert("도박은 한 번만 사용할 수 있습니다.");
+                break;
+            }
             if (revenue >= 500000) {
+                usedItems['도박'] = true;
                 revenue -= 500000;
                 const chance = Math.random();
                 if (chance < 0.5) {
