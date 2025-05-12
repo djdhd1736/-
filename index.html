@@ -95,7 +95,7 @@
             { name: '못먹어도고고', ability: '매너손님 이벤트 발생 시 총매출 20% 증가' },
             { name: '메탄시라소니', ability: '사고 이벤트 발생 시 총매출 20% 증가' },
             { name: '대깨강김홍식', ability: '콜취소 이벤트 발생 시 피로도 20% 감소' },
-            { name: '피웅신만보면짖는개, ability: '진상손님 이벤트 발생 시 총매출 20% 증가' },
+            { name: '피웅신만보면짖는개', ability: '진상손님 이벤트 발생 시 총매출 20% 증가' },
             { name: '정의사신', ability: '착변 이벤트 발생 시 총매출 20% 증가' }
         ];
 
@@ -120,8 +120,8 @@ let boostedEvent = false;
             { name: '팁', img: 'https://i.imgur.com/WFWoTZX.jpeg', effect: () => { revenue += 50000; fatigue -= 5; if (selectedCharacter === '베컴') revenue *= 1.8; } },
             { name: '진상손님', img: 'https://i.imgur.com/yaXRNVx.jpeg', effect: () => { fatigue += 20; if (['미호이주', '피웅신만보면짖는개'].includes(selectedCharacter)) revenue *= 1.8; } },
             { name: '매너손님', img: 'https://i.imgur.com/VzLkotH.jpeg', effect: () => { fatigue -= 10; if (selectedCharacter === '못먹어도고고') revenue *= 1.9; } },
-            { name: '사고', img: 'https://i.imgur.com/PhTKoAa.jpeg', effect: () => { fatigue += 30; revenue -= 300000; if (selectedCharacter === '숟가락') fatigue *= 0.8; if (selectedCharacter === '메탄시라소니') revenue *= 0.8; } },
-            { name: '콜취소', img: 'https://i.imgur.com/quMoFAr.jpeg', effect: () => { fatigue += 5; if (selectedCharacter === '대깨강김홍식') fatigue *= 1.8; } },
+            { name: '사고', img: 'https://i.imgur.com/PhTKoAa.jpeg', effect: () => { fatigue += 30; revenue -= 300000; if (selectedCharacter === '숟가락') fatigue *= 0.8; if (selectedCharacter === '메탄시라소니') revenue *= 1.2; } },
+            { name: '콜취소', img: 'https://i.imgur.com/quMoFAr.jpeg', effect: () => { fatigue += 5; if (selectedCharacter === '대깨강김홍식') fatigue *= 0.8; } },
             { name: '아무일 없음', img: 'https://i.imgur.com/j5Zadsd.jpeg', effect: () => { if (selectedCharacter === '전설의대리') fatigue *= 0.8; } },
             { name: '경유', img: 'https://i.imgur.com/lDTp7kk.jpeg', effect: () => { let amount = Math.floor(Math.random() * 25000) + 5000; revenue += amount; if (selectedCharacter === '대붕이타마') revenue *= 1.8; } },
             { name: '착변', img: 'https://i.imgur.com/O3pdLMQ.jpeg', effect: () => { let amount = Math.floor(Math.random() * 25000) + 5000; revenue += amount; if (selectedCharacter === '정의사신') revenue *= 1.8; } }
