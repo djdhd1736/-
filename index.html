@@ -83,19 +83,19 @@
         const db = getFirestore(app);
 
         const characters = [
-            { name: '밤지기', ability: '피로도 -30% 시작' },
-            { name: '전설의대리', ability: '아무일 없음 시 피로도 50% 감소' },
-            { name: '숟가락', ability: '사고 시 피로도 50% 감소' },
-            { name: '베컴', ability: '팁 이벤트 시 총매출 10% 증가' },
-            { name: '마인드세분', ability: '맞춤콜 선택 시마다 피로도 2% 하락' },
-            { name: '장대붕어', ability: '장거리/맞춤콜 선택 시 총매출 10% 증가' },
-            { name: '미호이주', ability: '진상손님 이벤트 발생 시 총매출 20% 증가' },
-            { name: '오필승콜이야', ability: '콜 선택마다 총매출·피로도 5% 추가 증가' },
-            { name: '대붕이타마', ability: '경유 이벤트 발생 시 총매출 20% 증가' },
-            { name: '럭키네오', ability: '매너손님 이벤트 발생 시 총매출 20% 증가' },
-            { name: '메탄시라소니', ability: '사고 이벤트 발생 시 총매출 20% 증가' },
-            { name: '대깨강김홍식', ability: '콜취소 이벤트 발생 시 피로도 20% 감소' },
-            { name: '리정자', ability: '진상손님 이벤트 발생 시 총매출 20% 증가' },
+            { name: '못먹어도고고', ability: '피로도 -60% 시작' },
+            { name: '전설의대리', ability: '아무일 없음 시 피로도 대폭 감소' },
+            { name: '숟가락', ability: '사고 시 피로도 대폭 감소' },
+            { name: '베컴', ability: '팁 이벤트 시 총매출 증가' },
+            { name: '마인드세분', ability: '맞춤콜 선택 시마다 피로도 소폭 하락' },
+            { name: '장대붕어', ability: '장거리/맞춤콜 선택 시 총매출 증가' },
+            { name: '미호이주', ability: '진상손님 이벤트 발생 시 총매출 증가' },
+            { name: '오필승콜이야', ability: '콜 선택마다 총매출·피로도 추가 증가' },
+            { name: '대붕이타마', ability: '경유 이벤트 발생 시 총매출 증가' },
+            { name: '부천오정구', ability: '매너손님 이벤트 발생 시 총매출 증가' },
+            { name: '메탄시라소니', ability: '사고 이벤트 발생 시 총매출 증가' },
+            { name: '대깨강김홍식', ability: '콜취소 이벤트 발생 시 피로도 감소' },
+            { name: '피웅신만보면짖는개, ability: '진상손님 이벤트 발생 시 총매출 증가' },
             { name: '정의사신', ability: '착변 이벤트 발생 시 총매출 20% 증가' }
         ];
 
@@ -107,24 +107,24 @@ let boostedEvent = false;
         let revenue = 0, fatigue = 0, goal = 100000, turns = 0;
 
         const choices = [
-            { name: '장거리콜', fatigue: 20, min: 50000, max: 100000 },
-            { name: '단거리콜', fatigue: 5, min: 10000, max: 20000 },
-            { name: '맞춤콜', fatigue: 5, min: 20000, max: 40000 },
-            { name: '카카오', fatigue: 15, min: 20000, max: 60000 },
-            { name: '로지', fatigue: 15, min: 10000, max: 80000 },
-            { name: '티맵', fatigue: 15, min: 8000, max: 40000 },
-            { name: '콜마너', fatigue: 15, min: 15000, max: 70000 }
+            { name: '장거리콜', fatigue: 20, min: 50000, max: 200000 },
+            { name: '단거리콜', fatigue: 5, min: 10000, max: 30000 },
+            { name: '맞춤콜', fatigue: 10, min: 30000, max: 70000 },
+            { name: '카카오', fatigue: 10, min: 20000, max: 60000 },
+            { name: '로지', fatigue: 11, min: 10000, max: 80000 },
+            { name: '티맵', fatigue: 8, min: 8000, max: 50000 },
+            { name: '콜마너', fatigue: 7, min: 15000, max: 70000 }
         ];
 
         const events = [
-            { name: '팁', img: 'https://i.imgur.com/WFWoTZX.jpeg', effect: () => { revenue += 5000; fatigue -= 5; if (selectedCharacter === '베컴') revenue *= 1.1; } },
-            { name: '진상손님', img: 'https://i.imgur.com/yaXRNVx.jpeg', effect: () => { fatigue += 20; if (['미호이주', '리정자'].includes(selectedCharacter)) revenue *= 1.2; } },
-            { name: '매너손님', img: 'https://i.imgur.com/VzLkotH.jpeg', effect: () => { fatigue -= 10; if (selectedCharacter === '럭키네오') revenue *= 1.2; } },
-            { name: '사고', img: 'https://i.imgur.com/PhTKoAa.jpeg', effect: () => { fatigue += 30; revenue -= 300000; if (selectedCharacter === '숟가락') fatigue *= 0.5; if (selectedCharacter === '메탄시라소니') revenue *= 1.2; } },
-            { name: '콜취소', img: 'https://i.imgur.com/quMoFAr.jpeg', effect: () => { fatigue += 5; if (selectedCharacter === '대깨강김홍식') fatigue *= 0.8; } },
-            { name: '아무일 없음', img: 'https://i.imgur.com/j5Zadsd.jpeg', effect: () => { if (selectedCharacter === '전설의대리') fatigue *= 0.5; } },
-            { name: '경유', img: 'https://i.imgur.com/lDTp7kk.jpeg', effect: () => { let amount = Math.floor(Math.random() * 15000) + 5000; revenue += amount; if (selectedCharacter === '대붕이타마') revenue *= 1.2; } },
-            { name: '착변', img: 'https://i.imgur.com/O3pdLMQ.jpeg', effect: () => { let amount = Math.floor(Math.random() * 15000) + 5000; revenue += amount; if (selectedCharacter === '정의사신') revenue *= 1.2; } }
+            { name: '팁', img: 'https://i.imgur.com/WFWoTZX.jpeg', effect: () => { revenue += 15000; fatigue -= 5; if (selectedCharacter === '베컴') revenue *= 1.5; } },
+            { name: '진상손님', img: 'https://i.imgur.com/yaXRNVx.jpeg', effect: () => { fatigue += 20; if (['미호이주', '피웅신만보면짖는개'].includes(selectedCharacter)) revenue *= 1.5; } },
+            { name: '매너손님', img: 'https://i.imgur.com/VzLkotH.jpeg', effect: () => { fatigue -= 10; if (selectedCharacter === '부천오정구') revenue *= 1.9; } },
+            { name: '사고', img: 'https://i.imgur.com/PhTKoAa.jpeg', effect: () => { fatigue += 30; revenue -= 100000; if (selectedCharacter === '숟가락') fatigue *= 1.5; if (selectedCharacter === '메탄시라소니') revenue *= 1.5; } },
+            { name: '콜취소', img: 'https://i.imgur.com/quMoFAr.jpeg', effect: () => { fatigue += 5; if (selectedCharacter === '대깨강김홍식') fatigue *= 1.5; } },
+            { name: '아무일 없음', img: 'https://i.imgur.com/j5Zadsd.jpeg', effect: () => { if (selectedCharacter === '전설의대리') fatigue *= 1.5; } },
+            { name: '경유', img: 'https://i.imgur.com/lDTp7kk.jpeg', effect: () => { let amount = Math.floor(Math.random() * 15000) + 5000; revenue += amount; if (selectedCharacter === '대붕이타마') revenue *= 1.5; } },
+            { name: '착변', img: 'https://i.imgur.com/O3pdLMQ.jpeg', effect: () => { let amount = Math.floor(Math.random() * 15000) + 5000; revenue += amount; if (selectedCharacter === '정의사신') revenue *= 1.5; } }
         ];
 
         
@@ -149,7 +149,7 @@ function playSound(id) {
             document.getElementById('character').textContent = name;
             document.getElementById('character-select').style.display = 'none';
             document.getElementById('game').style.display = 'block';
-            if (name === '밤지기') fatigue -= 30;
+            if (name === '못먹어도고고') fatigue -= 60;
             updateDisplay();
             setupChoices();
         }
@@ -195,7 +195,7 @@ function playSound(id) {
             fatigue += choice.fatigue;
 
             if (selectedCharacter === '마인드세분' && choice.name === '맞춤콜') {
-                fatigue -= 2;
+                fatigue -= 3;
             }
 
             const event = getRandomEvent();
