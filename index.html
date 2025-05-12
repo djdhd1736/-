@@ -115,6 +115,7 @@ let proChance = 2;
 let boostedEvent = false;
 
         let revenue = 0, fatigue = 0, goal = 100000, turns = 0;
+let wheelBoost = false, gambleBoost = false;
 
         const choices = [
             { name: '장거리콜', fatigue: 20, min: 50000, max: 200000 },
@@ -201,7 +202,8 @@ function playSound(id) {
             playSound('button-sound');
             turns++;
             let actualRevenue = Math.floor(Math.random() * (choice.max - choice.min + 1)) + choice.min;
-            revenue += actualRevenue;
+            if (wheelBoost || gambleBoost) actualRevenue *= 2;
+revenue += actualRevenue;
             fatigue += choice.fatigue;
 
             if (selectedCharacter === '마인드세분' && choice.name === '맞춤콜') {
@@ -295,6 +297,7 @@ window.buyItem = function(name) {
                 alert("돈이 부족합니다.");
             }
             break;
+
         case '핫식스':
             if (itemCounts['핫식스'] >= 5) {
                 alert("핫식스는 최대 5회까지만 구매할 수 있습니다.");
@@ -310,20 +313,23 @@ window.buyItem = function(name) {
                 alert("돈이 부족합니다.");
             }
             break;
+
         case '전동휠':
             if (usedItems['전동휠']) {
                 alert("전동휠은 한 번만 사용할 수 있습니다.");
                 break;
             }
             if (revenue >= 1000000) {
+                revenue -= 1000000;
                 usedItems['전동휠'] = true;
-                revenue *= 2;
+                wheelBoost = true;
                 fatigue = Math.max(0, fatigue - 90);
                 alert("전동휠을 타고 다녀왔습니다! 매출이 2배, 피로도 크게 감소!");
             } else {
                 alert("돈이 부족합니다.");
             }
             break;
+
         case '도박':
             if (usedItems['도박']) {
                 alert("도박은 한 번만 사용할 수 있습니다.");
@@ -331,10 +337,11 @@ window.buyItem = function(name) {
             }
             if (revenue >= 500000) {
                 usedItems['도박'] = true;
-                revenue -= 500000;
+                const bet = 500000;
+                revenue -= bet;
                 const chance = Math.random();
                 if (chance < 0.5) {
-                    revenue *= 2;
+                    gambleBoost = true;
                     alert("도박 성공! 매출이 2배로 증가!");
                 } else {
                     alert("도박 실패... 게임 오버.");
