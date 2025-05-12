@@ -106,6 +106,11 @@ let usedItems = {
     '도박': false
 };
 
+let itemCounts = {
+    '박카스': 0,
+    '핫식스': 0
+};
+
 let proChance = 2;
 let boostedEvent = false;
 
@@ -266,6 +271,7 @@ function playSound(id) {
         }
 
         function resetGame() {
+            itemCounts = { '박카스': 0, '핫식스': 0 };
             usedItems = { '전동휠': false, '도박': false };
             revenue = 0; fatigue = 0; goal = 100000; turns = 0; proChance = 2;
             document.getElementById('game').style.display = 'none';
@@ -276,7 +282,12 @@ function playSound(id) {
 window.buyItem = function(name) {
     switch(name) {
         case '박카스':
+            if (itemCounts['박카스'] >= 5) {
+                alert("박카스는 최대 5회까지만 구매할 수 있습니다.");
+                break;
+            }
             if (revenue >= 200000) {
+                itemCounts['박카스']++;
                 revenue -= 200000;
                 fatigue = Math.max(0, fatigue - (10 + Math.floor(Math.random() * 21)));
                 alert("박카스를 마셨습니다. 피로도가 줄었습니다!");
@@ -285,7 +296,12 @@ window.buyItem = function(name) {
             }
             break;
         case '핫식스':
+            if (itemCounts['핫식스'] >= 5) {
+                alert("핫식스는 최대 5회까지만 구매할 수 있습니다.");
+                break;
+            }
             if (revenue >= 300000) {
+                itemCounts['핫식스']++;
                 revenue -= 300000;
                 const recovery = 20 + Math.floor(Math.random() * 41);
                 fatigue = Math.max(0, fatigue - recovery);
